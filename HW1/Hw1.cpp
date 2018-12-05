@@ -16,28 +16,32 @@ using namespace cv;
 /*--------------------------------定义鼠标事件--画直线--------------------------*/
 bool got_line = false;
 //全局变量
-Point beginPoint = Point(0, 0);//--注意这个有一个初始化的(0,0)
 bool got_beigin_point = false;
-Point endPoint = Point(0, 0);//--注意这个有一个自己默认的初始化(0,0)
+vector<Point>beginPointVec;
+vector<Point>endPointVec;
+int pointNum = 0;
 void mouseLineHandler(int event, int x, int y, int flags, void *param)
 {
 	switch (event)
 	{
 		case CV_EVENT_LBUTTONDOWN:
-			beginPoint = Point(x, y);
-			endPoint = beginPoint;
+			//beginPoint = Point(x, y);
+			beginPointVec.push_back(Point(x, y));
+			endPointVec.push_back(Point(x, y));
+			//endPoint = beginPoint;
 			got_beigin_point = true;
 			break;
 		case CV_EVENT_MOUSEMOVE:
 			if (got_beigin_point)
 			{
-				endPoint = Point(x, y);
+				endPointVec[pointNum] = Point(x, y);
 			}
 			break;
 		case CV_EVENT_LBUTTONUP:
 			got_line = true;
-			endPoint = Point(x, y);
+			endPointVec[pointNum] = Point(x, y);
 			got_beigin_point = false;
+			++pointNum;
 			break;
 		default:
 			break;
@@ -68,7 +72,6 @@ int main(int argc, const char** argv)
 	String videoFile = parser.get<String>("sourceFile");
 	string fileName = parser.get<string>("dstFile");
 	char flag;
-	int ch;
 	int num = 0;
     // Check if params are correctly parsed in his variables
     if (!parser.check())
@@ -117,11 +120,14 @@ int main(int argc, const char** argv)
 							
 				cap >> frame; // get a new frame from camera
 				//画直线
-				if (got_beigin_point || got_line)
+				if (got_line || got_beigin_point)//负责实时显示所有已经完成的线条及正在绘制的线条
 				{
-					line(frame, beginPoint, endPoint, Scalar(0, 0, 255), 2);
-				}
+					for (int i = 0; i < beginPointVec.size();i++)
+					{
+						line(frame, beginPointVec[i], endPointVec[i], Scalar(0, 0, 255), 2);
+					}
 				
+				}					
 				imshow("Video", frame);
 				writer << frame;//write a new frame in an output file
 				imshow("Video", frame);
